@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NutriPlanner | Login</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600&family=Playfair+Display:wght@700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary-blue: #2E5BFF;
+            --primary-green: #34C759;
+            --bg-soft: #F0F4F8;
+            --white: #FFFFFF;
+            --text-main: #1E293B;
+            --text-soft: #64748B;
+            --border: #E2E8F0;
+            --shadow: 0 20px 40px rgba(0, 0, 0, 0.08);
+            --transition: all 0.3s ease;
+        }
+
+        * { margin:0; padding:0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Outfit', sans-serif;
+            background: linear-gradient(135deg, #F0F4F8 0%, #D9E2EC 100%);
+            height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-main);
+        }
+
+        .auth-card {
+            background: var(--white);
+            width: 100%;
+            max-width: 450px;
+            padding: 3rem;
+            border-radius: 30px;
+            box-shadow: var(--shadow);
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .auth-card::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 6px;
+            background: linear-gradient(to right, var(--primary-blue), var(--primary-green));
+        }
+
+        .logo h1 { font-family: 'Playfair Display', serif; font-size: 2.2rem; color: var(--primary-blue); margin-bottom: 0.5rem; }
+        .logo span { color: var(--primary-green); }
+        .subtitle { color: var(--text-soft); font-size: 0.95rem; margin-bottom: 2.5rem; }
+
+        .input-group { text-align: left; margin-bottom: 1.5rem; }
+        .input-group label { display: block; font-size: 0.85rem; font-weight: 600; color: var(--text-soft); margin-bottom: 8px; }
+        .input-group input {
+            width: 100%;
+            padding: 14px;
+            border-radius: 12px;
+            border: 1px solid var(--border);
+            background: #F8FAFC;
+            font-family: inherit;
+            font-size: 1rem;
+            outline: none;
+            transition: var(--transition);
+        }
+        .input-group input:focus { border-color: var(--primary-blue); background: white; box-shadow: 0 0 0 4px rgba(46, 91, 255, 0.1); }
+
+        .auth-btn {
+            width: 100%;
+            padding: 16px;
+            background: linear-gradient(135deg, var(--primary-blue) 0%, #1E40AF 100%);
+            color: white;
+            border: none;
+            border-radius: 14px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: var(--transition);
+            margin-top: 1rem;
+            box-shadow: 0 10px 20px rgba(46, 91, 255, 0.2);
+        }
+        .auth-btn:hover { transform: translateY(-3px); box-shadow: 0 15px 30px rgba(46, 91, 255, 0.3); }
+
+        .toggle-link { margin-top: 1.5rem; font-size: 0.9rem; color: var(--text-soft); }
+        .toggle-link a { color: var(--primary-blue); text-decoration: none; font-weight: 600; cursor: pointer; }
+
+        .error-msg { background: #FEE2E2; color: #DC2626; padding: 10px; border-radius: 8px; font-size: 0.85rem; margin-bottom: 1.5rem; display: none; }
+    </style>
+</head>
+<body>
+
+    <div class="auth-card">
+        <div class="logo"><h1>Nutri<span>Planner</span></h1></div>
+        <p class="subtitle" id="authSubtitle">Entre no seu dashboard de saúde</p>
+
+        <div id="errorBox" class="error-msg"></div>
+
+        <div class="input-group">
+            <label>NOME DE USUÁRIO</label>
+            <input type="text" id="username" placeholder="Seu apelido">
+        </div>
+
+        <div class="input-group">
+            <label>SENHA</label>
+            <input type="password" id="password" placeholder="Sua senha secreta">
+        </div>
+
+        <button id="authBtn" class="auth-btn">Acessar Plataforma</button>
+
+        <p class="toggle-link" id="toggleLink">Ainda não tem conta? <a onclick="toggleMode()">Crie uma aqui</a></p>
+    </div>
+
+    <script>
+        let isLoginMode = true;
+        const users = JSON.parse(localStorage.getItem('nutriAppUsers')) || [];
+
+        const authBtn = document.getElementById('authBtn');
+        const authSubtitle = document.getElementById('authSubtitle');
+        const toggleLink = document.getElementById('toggleLink');
+        const errorBox = document.getElementById('errorBox');
+        
+        const userInput = document.getElementById('username');
+        const passInput = document.getElementById('password');
+
+        function toggleMode() {
+            isLoginMode = !isLoginMode;
+            authSubtitle.innerText = isLoginMode ? 'Entre no seu dashboard de saúde' : 'Cadastre seu novo perfil NutriPlanner';
+            authBtn.innerText = isLoginMode ? 'Acessar Plataforma' : 'Criar minha conta';
+            toggleLink.innerHTML = isLoginMode ? 'Ainda não tem conta? <a onclick="toggleMode()">Crie uma aqui</a>' : 'Já tem conta? <a onclick="toggleMode()">Faça login aqui</a>';
+            errorBox.style.display = 'none';
+        }
+
+        authBtn.addEventListener('click', () => {
+            const username = userInput.value.trim().toLowerCase();
+            const password = passInput.value;
+
+            if (!username || !password) {
+                showError('Preencha todos os campos!');
+                return;
+            }
+
+            if (isLoginMode) {
+                const user = users.find(u => u.username === username && u.password === password);
+                if (user) {
+                    localStorage.setItem('sessionUser', JSON.stringify(user));
+                    window.location.href = 'index.html';
+                } else {
+                    showError('Usuário ou senha incorretos!');
+                }
+            } else {
+                if (users.find(u => u.username === username)) {
+                    showError('Este nome de usuário já existe!');
+                } else {
+                    const newUser = { username, password };
+                    users.push(newUser);
+                    localStorage.setItem('nutriAppUsers', JSON.stringify(users));
+                    showError('Conta criada! Faça login para entrar.', 'green');
+                    toggleMode();
+                }
+            }
+        });
+
+        function showError(msg, color = 'red') {
+            errorBox.innerText = msg;
+            errorBox.style.display = 'block';
+            errorBox.style.background = color === 'green' ? '#DCFCE7' : '#FEE2E2';
+            errorBox.style.color = color === 'green' ? '#166534' : '#DC2626';
+        }
+
+        // Se já logado, redireciona
+        if (localStorage.getItem('sessionUser')) {
+            window.location.href = 'index.html';
+        }
+    </script>
+</body>
+</html>

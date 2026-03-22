@@ -215,6 +215,10 @@
                 <button class="nav-link" id="theme-toggle" style="width: 100%; border: none; cursor: pointer; text-align: left; background: transparent;">
                     🌓 Alternar Tema
                 </button>
+                <div id="userDisplay" style="margin-top: 1rem; padding: 10px; font-size: 0.8rem; color: var(--text-soft); border-top: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center;">
+                    <span id="welcomeName">Olá, Usuário</span>
+                    <button onclick="logout()" style="background: none; border: none; color: #DC2626; cursor: pointer; font-weight: 600;">Sair</button>
+                </div>
             </nav>
 
             <div class="filter-section">
@@ -276,6 +280,19 @@
 
     <!-- JAVASCRIPT -->
     <script>
+        // AUTH GUARD
+        const sessionUser = JSON.parse(localStorage.getItem('sessionUser'));
+        if (!sessionUser) {
+            window.location.href = 'login.html';
+        } else {
+            document.getElementById('welcomeName').innerText = `Logado: ${sessionUser.username}`;
+        }
+
+        function logout() {
+            localStorage.removeItem('sessionUser');
+            window.location.href = 'login.html';
+        }
+
         /**
          * 1. BASE DE DADOS ROBUSTA (Incluindo Objetivo)
          * Propriedades: nome, tipo, preco, dieta, objetivo

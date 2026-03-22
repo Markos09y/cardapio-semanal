@@ -1,0 +1,351 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard de Saúde | Carlos Eduardo Mendes Bragança</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600&family=Playfair+Display:wght@700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary-blue: #2E5BFF;
+            --primary-green: #34C759;
+            --bg-soft: #F8FAFC;
+            --white: #FFFFFF;
+            --text-main: #1E293B;
+            --text-soft: #64748B;
+            --border: #E2E8F0;
+            --shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05);
+            --transition: all 0.3s ease;
+        }
+
+        * { margin:0; padding:0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Outfit', sans-serif;
+            background-color: var(--bg-soft);
+            color: var(--text-main);
+            line-height: 1.6;
+            padding-bottom: 50px;
+        }
+
+        .container {
+            max-width: 1100px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        /* HEADER */
+        .profile-header {
+            background: linear-gradient(135deg, #2E5BFF 0%, #34C759 100%);
+            padding: 3rem 2rem;
+            border-radius: 24px;
+            color: white;
+            margin-bottom: 2rem;
+            box-shadow: 0 20px 40px rgba(46, 91, 255, 0.15);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .profile-info h1 {
+            font-family: 'Playfair Display', serif;
+            font-size: 2.2rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .profile-info p {
+            opacity: 0.9;
+            font-weight: 300;
+            letter-spacing: 1px;
+        }
+
+        .badge {
+            background: rgba(255, 255, 255, 0.2);
+            padding: 0.5rem 1.2rem;
+            border-radius: 100px;
+            font-size: 0.85rem;
+            backdrop-filter: blur(10px);
+        }
+
+        /* STATS GRID */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .stat-card {
+            background: var(--white);
+            padding: 1.5rem;
+            border-radius: 20px;
+            box-shadow: var(--shadow);
+            display: flex;
+            align-items: center;
+            gap: 1.2rem;
+            border: 1px solid var(--border);
+            transition: var(--transition);
+        }
+
+        .stat-card:hover { transform: translateY(-5px); }
+
+        .stat-icon {
+            width: 50px;
+            height: 50px;
+            border-radius: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+        }
+
+        .icon-blue { background: #E3F2FD; color: var(--primary-blue); }
+        .icon-green { background: #E8F5E9; color: var(--primary-green); }
+
+        .stat-info h3 { font-size: 1.4rem; font-weight: 600; color: var(--text-main); }
+        .stat-info p { color: var(--text-soft); font-size: 0.9rem; }
+
+        /* DIET TABLE */
+        .diet-section {
+            background: var(--white);
+            padding: 2rem;
+            border-radius: 24px;
+            box-shadow: var(--shadow);
+            border: 1px solid var(--border);
+            margin-bottom: 2rem;
+            overflow-x: auto;
+        }
+
+        .section-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            min-width: 800px;
+        }
+
+        th {
+            text-align: left;
+            padding: 1.2rem;
+            color: var(--text-soft);
+            font-weight: 500;
+            border-bottom: 1px solid var(--border);
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        td {
+            padding: 1.5rem 1.2rem;
+            border-bottom: 1px solid #F1F5F9;
+        }
+
+        .time-cell { font-weight: 600; color: var(--primary-blue); min-width: 100px; }
+        .meal-cell { font-weight: 600; min-width: 150px; color: var(--text-main); }
+        .content-cell { color: #444; line-height: 1.4; }
+        .replace-cell { 
+            color: var(--primary-green); 
+            font-size: 0.85rem; 
+            font-style: italic; 
+            background: #F0FAF3; 
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            display: inline-block;
+        }
+
+        /* TIPS CARDS */
+        .tips-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .tip-card {
+            background: var(--white);
+            padding: 1.5rem;
+            border-radius: 20px;
+            box-shadow: var(--shadow);
+            border-left: 5px solid transparent;
+            transition: var(--transition);
+        }
+
+        .tip-card h4 { margin-bottom: 0.5rem; display: flex; align-items: center; gap: 10px; }
+        .tip-card p { font-size: 0.95rem; color: var(--text-soft); }
+
+        .tip-alcohol { border-left-color: #FFB74D; }
+        .tip-meat { border-left-color: #FF5252; }
+        .tip-resto { border-left-color: #7E57C2; }
+
+        /* RESPONSIVE */
+        @media (max-width: 768px) {
+            .profile-header { flex-direction: column; text-align: center; gap: 1.5rem; }
+            .container { padding: 1rem; }
+            .profile-info h1 { font-size: 1.8rem; }
+        }
+
+        /* DARK MODE OVERRIDES */
+        body.dark-theme {
+            --bg-soft: #0F172A;
+            --white: #1E293B;
+            --text-main: #F1F5F9;
+            --text-soft: #94A3B8;
+            --border: #334155;
+            --shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+        }
+
+        body.dark-theme .stat-card, 
+        body.dark-theme .diet-section, 
+        body.dark-theme .tip-card {
+            background: #1E293B;
+            border-color: #334155;
+        }
+
+        body.dark-theme td, body.dark-theme th {
+            border-bottom-color: #334155;
+        }
+
+        body.dark-theme .content-cell { color: #CBD5E1; }
+        body.dark-theme .replace-cell { background: #1E3A8A; color: #60A5FA; }
+        body.dark-theme .profile-header { box-shadow: 0 20px 40px rgba(0,0,0,0.3); }
+
+        .theme-btn {
+            background: var(--white);
+            border: 1px solid var(--border);
+            padding: 8px 16px;
+            border-radius: 12px;
+            cursor: pointer;
+            font-family: inherit;
+            font-weight: 500;
+            color: var(--text-main);
+            transition: var(--transition);
+        }
+        .theme-btn:hover { background: var(--bg-soft); border-color: var(--primary-blue); }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+            <a href="index.html" style="display: inline-flex; align-items: center; gap: 8px; text-decoration: none; color: var(--primary-blue); font-weight: 500;">
+                ← Voltar para o Gerador
+            </a>
+            <button id="theme-toggle" class="theme-btn">🌓 Modo Escuro</button>
+        </div>
+        <!-- HEADER -->
+        <header class="profile-header">
+            <div class="profile-info">
+                <p>PACIENTE ATIVO • 2026</p>
+                <h1>Juliana Martins de Oliveira</h1>
+                <div class="badge">Plano Alimentar Individualizado</div>
+            </div>
+            <div class="profile-photo">
+                <div style="width: 80px; height: 80px; background: rgba(255,255,255,0.2); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 2rem;">👤</div>
+            </div>
+        </header>
+
+        <!-- STATS -->
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-icon icon-blue">💧</div>
+                <div class="stat-info">
+                    <p>Meta de Hidratação</p>
+                    <h3>3.25 L/dia</h3>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon icon-green">✨</div>
+                <div class="stat-info">
+                    <p>Refeições Livres</p>
+                    <h3>Max 2/semana</h3>
+                </div>
+            </div>
+        </div>
+
+        <!-- DIET TABLE -->
+        <section class="diet-section">
+            <div class="section-title">📅 Detalhamento das Refeições</div>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Horário</th>
+                        <th>Refeição</th>
+                        <th>Sugestão Principal</th>
+                        <th>Substituições Rápidas</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td class="time-cell">09:30</td>
+                        <td class="meal-cell">☕ Café da Manhã</td>
+                        <td class="content-cell">Pão francês (1 unid), Ovo mexido (2 unid), Queijo minas (1 fatia) e Mamão (1/2 unid) com aveia.</td>
+                        <td><span class="replace-cell">Crepioca de queijo + 1 maçã</span></td>
+                    </tr>
+                    <tr>
+                        <td class="time-cell">12:30</td>
+                        <td class="meal-cell">🍛 Almoço</td>
+                        <td class="content-cell">Arroz (6 col. sopa), Feijão (1.5 concha), Frango grelhado (4 bifes pequenos) e salada variada (Brócolis, Cenoura e Folhas).</td>
+                        <td><span class="replace-cell">Massa integral com atum</span></td>
+                    </tr>
+                    <tr>
+                        <td class="time-cell">16:00</td>
+                        <td class="meal-cell">🥖 Lanche</td>
+                        <td class="content-cell">Pão francês (1 unid) com frango desfiado (2 col. sopa) e Banana prata (1 unid).</td>
+                        <td><span class="replace-cell">Iogurte grego + Aveia + Fruta</span></td>
+                    </tr>
+                    <tr>
+                        <td class="time-cell">20:30</td>
+                        <td class="meal-cell">🥗 Jantar</td>
+                        <td class="content-cell">Arroz (6 col. sopa), Feijão (1.5 concha) e Frango grelhado (2 bifes pequenos).</td>
+                        <td><span class="replace-cell">Omelete recheado com frango</span></td>
+                    </tr>
+                </tbody>
+            </table>
+        </section>
+
+        <!-- TIPS GRID -->
+        <h3 style="margin-bottom: 1.5rem; color: var(--text-soft); font-size: 1.1rem; text-transform: uppercase;">💡 Dicas Auxiliares</h3>
+        <div class="tips-grid">
+            <div class="tip-card tip-alcohol">
+                <h4>🍺 Álcool</h4>
+                <p>Sempre intercale o consumo com água. Prefira bebidas destiladas com opções zero açúcar (gin/tônica zero).</p>
+            </div>
+            <div class="tip-card tip-meat">
+                <h4>🥩 Carnes</h4>
+                <p>Priorize cortes magros para o dia a dia. Excelentes opções: Patinho, Alcatra e Peito de Frango.</p>
+            </div>
+            <div class="tip-card tip-resto">
+                <h4>🍱 Fora de Casa</h4>
+                <p><strong>Japa:</strong> Abuse do Shoyu Light e evite frituras. <strong>Hambúrguer:</strong> Evite pão brioche e maionese em excesso.</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const themeToggle = document.getElementById('theme-toggle');
+        const body = document.body;
+
+        themeToggle.addEventListener('click', () => {
+            body.classList.toggle('dark-theme');
+            const isDark = body.classList.contains('dark-theme');
+            localStorage.setItem('theme', isDark ? 'dark' : 'light');
+            updateThemeButton(isDark);
+        });
+
+        function updateThemeButton(isDark) {
+            themeToggle.innerHTML = isDark ? '☀️ Modo Claro' : '🌓 Modo Escuro';
+        }
+
+        if (localStorage.getItem('theme') === 'dark') {
+            body.classList.add('dark-theme');
+            updateThemeButton(true);
+        }
+    </script>
+</body>
+</html>

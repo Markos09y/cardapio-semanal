@@ -1,0 +1,343 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gerador de Cardápios Inteligente | NutriPlanner</title>
+    <!-- Importando fontes modernas -->
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600&family=Playfair+Display:wght@700&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --primary-green: #2D5A27;
+            --primary-green-light: #4A7C44;
+            --bg-beige: #F5F1E9;
+            --accent-orange: #E67E22;
+            --text-dark: #2C3E50;
+            --white: #FFFFFF;
+            --shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
+            --border-radius: 16px;
+            --transition: all 0.4s cubic-bezier(0.165, 0.84, 0.44, 1);
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Outfit', sans-serif;
+            background-color: var(--bg-beige);
+            color: var(--text-dark);
+            line-height: 1.6;
+        }
+
+        .app-container { display: flex; min-height: 100vh; }
+
+        /* SIDEBAR */
+        .sidebar {
+            width: 350px;
+            background: var(--white);
+            padding: 3rem 2rem;
+            box-shadow: 4px 0 30px rgba(0, 0, 0, 0.02);
+            z-index: 100;
+            display: flex;
+            flex-direction: column;
+            gap: 2rem;
+            position: sticky;
+            top: 0;
+            height: 100vh;
+        }
+
+        .logo h1 { font-family: 'Playfair Display', serif; font-size: 2.2rem; color: var(--primary-green); }
+        .logo span { color: var(--accent-orange); }
+
+        .filter-section h3 {
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            color: #AAB;
+            margin-bottom: 1rem;
+        }
+
+        .select-group { display: flex; flex-direction: column; gap: 0.8rem; }
+
+        .radio-item {
+            display: flex; align-items: center; gap: 10px;
+            cursor: pointer; padding: 12px 15px;
+            background: #fdfdfd; border: 1px solid #eee;
+            border-radius: 12px; transition: var(--transition);
+        }
+
+        .radio-item:hover { border-color: var(--primary-green); background: #fff; }
+        .radio-item input { accent-color: var(--primary-green); width: 18px; height: 18px; }
+        .radio-item span { font-size: 0.95rem; }
+
+        .generate-btn {
+            margin-top: auto;
+            background: var(--accent-orange);
+            color: var(--white);
+            border: none;
+            padding: 1.2rem;
+            border-radius: var(--border-radius);
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: var(--transition);
+            box-shadow: 0 8px 20px rgba(230, 126, 34, 0.2);
+        }
+
+        .generate-btn:hover { transform: translateY(-3px); background: #D35400; }
+
+        /* MAIN CONTENT */
+        .main-content { flex: 1; padding: 4rem; max-width: 1400px; margin: 0 auto; }
+
+        .header-content {
+            display: flex; justify-content: space-between; align-items: flex-end;
+            margin-bottom: 4rem;
+        }
+
+        .header-text h2 { font-family: 'Playfair Display', serif; font-size: 2.8rem; color: var(--primary-green); }
+        .header-text p { color: #777; font-size: 1.1rem; }
+
+        .cost-display {
+            background: var(--white);
+            padding: 1rem 2rem;
+            border-radius: 30px;
+            box-shadow: var(--shadow);
+            border-left: 5px solid var(--accent-orange);
+            font-weight: 600;
+            color: var(--primary-green);
+        }
+
+        .cost-display span { color: var(--accent-orange); font-size: 1.4rem; margin-left: 10px; }
+
+        /* GRID SYSTEM */
+        .menu-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 1.5rem;
+        }
+
+        .day-card {
+            background: var(--white);
+            border-radius: var(--border-radius);
+            padding: 1.5rem;
+            box-shadow: var(--shadow);
+            border-top: 4px solid var(--primary-green);
+            transition: var(--transition);
+            animation: fadeIn 0.6s ease forwards;
+        }
+
+        .day-card:hover { transform: translateY(-5px); }
+
+        .day-card h4 { font-size: 1.1rem; margin-bottom: 1.2rem; color: var(--primary-green); border-bottom: 1px solid #f0f0f0; padding-bottom: 5px; }
+
+        .meal-box { margin-bottom: 1rem; }
+        .meal-box:last-child { margin-bottom: 0; }
+        .meal-tag { font-size: 0.65rem; text-transform: uppercase; font-weight: 700; color: var(--accent-orange); display: block; margin-bottom: 2px; }
+        .meal-name { font-size: 0.95rem; font-weight: 500; color: var(--text-dark); line-height: 1.2; }
+
+        .empty-state { grid-column: 1 / span 7; text-align: center; padding: 8rem; border: 2px dashed #CCC; border-radius: var(--border-radius); color: #999; }
+
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(15px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* RESPONSIVE */
+        @media (max-width: 1400px) { .menu-grid { grid-template-columns: repeat(4, 1fr); } }
+        @media (max-width: 1000px) {
+            .app-container { flex-direction: column; }
+            .sidebar { width: 100%; height: auto; position: static; padding: 2rem; }
+            .menu-grid { grid-template-columns: repeat(2, 1fr); }
+            .header-content { flex-direction: column; align-items: center; gap: 2rem; text-align: center; }
+        }
+        @media (max-width: 600px) { .menu-grid { grid-template-columns: 1fr; } }
+    </style>
+</head>
+<body>
+
+    <div class="app-container">
+        <!-- SIDEBAR -->
+        <aside class="sidebar">
+            <div class="logo"><h1>Nutri<span>Planner</span></h1></div>
+
+            <div class="filter-section">
+                <h3>💰 Orçamento</h3>
+                <div class="select-group">
+                    <label class="radio-item"><input type="radio" name="budget" value="economico" checked><span>Econômico (R$ 10)</span></label>
+                    <label class="radio-item"><input type="radio" name="budget" value="padrao"><span>Padrão (R$ 25)</span></label>
+                    <label class="radio-item"><input type="radio" name="budget" value="premium"><span>Premium (R$ 50)</span></label>
+                </div>
+            </div>
+
+            <div class="filter-section">
+                <h3>🥬 Dieta</h3>
+                <div class="select-group">
+                    <label class="radio-item"><input type="radio" name="diet" value="todos" checked><span>Sem restrições</span></label>
+                    <label class="radio-item"><input type="radio" name="diet" value="vegetarian"><span>Vegetariana</span></label>
+                    <label class="radio-item"><input type="radio" name="diet" value="fit"><span>Fit / Saudável</span></label>
+                </div>
+            </div>
+
+            <button class="generate-btn" id="btn-gerar">Gerar Cardápio Semanal</button>
+        </aside>
+
+        <!-- MAIN -->
+        <main class="main-content">
+            <header class="header-content">
+                <div class="header-text">
+                    <h2>Weekly Planner</h2>
+                    <p>Variedade garantida e controle de gastos.</p>
+                </div>
+                <div class="cost-display" id="cost-info">
+                    Custo Semanal: <span id="total-cost">R$ 0,00</span>
+                </div>
+            </header>
+
+            <div class="menu-grid" id="container">
+                <div class="empty-state">Personalize seus filtros e clique em Gerar.</div>
+            </div>
+        </main>
+    </div>
+
+    <!-- JAVASCRIPT -->
+    <script>
+        /**
+         * 1. BASE DE DADOS ROBUSTA (Mínimo 30 receitas)
+         * Propriedades: nome, tipo, preco, dieta
+         */
+        const database = [
+            // CAFÉ DA MANHÃ (12 opções)
+            { nome: "Tapioca com Ovo e Queijo", tipo: "Café", preco: "economico", dieta: "vegetarian" },
+            { nome: "Cuscuz Nordestino com Manteiga", tipo: "Café", preco: "economico", dieta: "vegetarian" },
+            { nome: "Pão Francês com Ovos Mexidos", tipo: "Café", preco: "economico", dieta: "todos" },
+            { nome: "Mingau de Aveia com Canela", tipo: "Café", preco: "economico", dieta: "fit" },
+            
+            { nome: "Panqueca de Banana e Mel", tipo: "Café", preco: "padrao", dieta: "fit" },
+            { nome: "Bowl de Iogurte com Morangos", tipo: "Café", preco: "padrao", dieta: "vegetarian" },
+            { nome: "Omelete de Ervas Finas", tipo: "Café", preco: "padrao", dieta: "fit" },
+            { nome: "Sanduíche Natural de Atum", tipo: "Café", preco: "padrao", dieta: "todos" },
+
+            { nome: "Avocado Toast com Ovo Pochê", tipo: "Café", preco: "premium", dieta: "vegetarian" },
+            { nome: "Smoothie de Frutas Vermelhas", tipo: "Café", preco: "premium", dieta: "fit" },
+            { nome: "Croissant com Cream Cheese", tipo: "Café", preco: "premium", dieta: "todos" },
+            { nome: "Pancetta e Ovos de Codorna", tipo: "Café", preco: "premium", dieta: "todos" },
+
+            // ALMOÇO (12 opções)
+            { nome: "Arroz, Feijão e Iscas de Frango", tipo: "Almoço", preco: "economico", dieta: "todos" },
+            { nome: "Macarrão Alho e Óleo com Vegetais", tipo: "Almoço", preco: "economico", dieta: "vegetarian" },
+            { nome: "Lentilha Temperada com Arroz Integral", tipo: "Almoço", preco: "economico", dieta: "fit" },
+            { nome: "Salada de Grão de Bico e Ovos", tipo: "Almoço", preco: "economico", dieta: "vegetarian" },
+
+            { nome: "Strogonoff de Frango com Batata Palha", tipo: "Almoço", preco: "padrao", dieta: "todos" },
+            { nome: "Filé de Tilápia com Purê de Batata", tipo: "Almoço", preco: "padrao", dieta: "fit" },
+            { nome: "Lasanha de Berinjela com Queijo", tipo: "Almoço", preco: "padrao", dieta: "vegetarian" },
+            { nome: "Bowl de Quinoa, Frango e Brócolis", tipo: "Almoço", preco: "padrao", dieta: "fit" },
+
+            { nome: "Salmão Grelhado com Aspargos", tipo: "Almoço", preco: "premium", dieta: "fit" },
+            { nome: "Risoto de Funghi Secchi", tipo: "Almoço", preco: "premium", dieta: "vegetarian" },
+            { nome: "Filé Mignon ao Molho de Vinho", tipo: "Almoço", preco: "premium", dieta: "todos" },
+            { nome: "Moqueca de Palmito Especial", tipo: "Almoço", preco: "premium", dieta: "vegetarian" },
+
+            // JANTAR (10 opções)
+            { nome: "Sopa de Ervilha com Torradas", tipo: "Jantar", preco: "economico", dieta: "vegetarian" },
+            { nome: "Wrap de Alface com Frango Desfiado", tipo: "Jantar", preco: "economico", dieta: "fit" },
+            { nome: "Omelete Recheado com Espinafre", tipo: "Jantar", preco: "economico", dieta: "vegetarian" },
+            { nome: "Crepioca de Queijo e Tomate", tipo: "Jantar", preco: "economico", dieta: "vegetarian" },
+
+            { nome: "Canja de Galinha Caseira", tipo: "Jantar", preco: "padrao", dieta: "todos" },
+            { nome: "Salada Caesar com Croutons", tipo: "Jantar", preco: "padrao", dieta: "vegetarian" },
+            { nome: "Sopa de Abóbora com Gengibre", tipo: "Jantar", preco: "padrao", dieta: "fit" },
+            { nome: "Torta de Frango com Salada Verde", tipo: "Jantar", preco: "padrao", dieta: "todos" },
+
+            { nome: "Poke de Salmão e Cream Cheese", tipo: "Jantar", preco: "premium", dieta: "todos" },
+            { nome: "Nhoque de Batata Doce ao Pesto", tipo: "Jantar", preco: "premium", dieta: "fit" },
+            { nome: "Quiche de Alho Poró Premium", tipo: "Jantar", preco: "premium", dieta: "vegetarian" },
+            { nome: "Filé de Badejo ao Forno", tipo: "Jantar", preco: "premium", dieta: "fit" }
+        ];
+
+        // Tabela de Preços (Custo por prato)
+        const priceMap = { "economico": 10, "padrao": 25, "premium": 50 };
+
+        const btnGerar = document.getElementById('btn-gerar');
+        const container = document.getElementById('container');
+        const totalDisplay = document.getElementById('total-cost');
+
+        btnGerar.addEventListener('click', () => {
+            const budget = document.querySelector('input[name="budget"]:checked').value;
+            const diet = document.querySelector('input[name="diet"]:checked').value;
+            
+            gerarCardapio(budget, diet);
+        });
+
+        function gerarCardapio(budget, diet) {
+            container.innerHTML = '';
+            let totalWeeklyCost = 0;
+            const dias = ["Segunda", "Terça", "Quarta", "Quinta", "Sexta", "Sábado", "Domingo"];
+
+            /**
+             * LÓGICA DE FILTRAGEM INICIAL
+             * Filtramos o banco para pegar apenas o que o usuário deseja.
+             */
+            const filteredPool = database.filter(r => {
+                const matchBudget = r.preco === budget;
+                const matchDiet = (diet === 'todos') || (r.dieta === diet || r.dieta === 'todos');
+                return matchBudget && matchDiet;
+            });
+
+            if (filteredPool.length === 0) {
+                container.innerHTML = '<div class="empty-state">Ops! Não há opções suficientes para estes filtros. Tente flexibilizar a dieta ou o orçamento!</div>';
+                totalDisplay.innerText = "R$ 0,00";
+                return;
+            }
+
+            /**
+             * LÓGICA DE NÃO-REPETIÇÃO E VARIEDADE
+             * 1. Separamos a lista filtrada em 3 categorias.
+             * 2. Embaralhamos cada lista aleatoriamente usando Math.random().
+             */
+            let cafes = shuffleArray(filteredPool.filter(r => r.tipo === "Café"));
+            let almocos = shuffleArray(filteredPool.filter(r => r.tipo === "Almoço"));
+            let jantares = shuffleArray(filteredPool.filter(r => r.tipo === "Jantar"));
+
+            // Índices para controle de ciclagem (caso haja menos de 7 opções na lista filtrada)
+            let iCafe = 0, iAlmoco = 0, iJantar = 0;
+
+            dias.forEach(dia => {
+                /**
+                 * GARANTINDO A VARIEDADE:
+                 * Pegamos o item da lista embaralhada usando o índice. 
+                 * Se a lista acabar (menos de 7 pratos únicos no filtro), o operador '%' garante que recomeçaremos o sorteio.
+                 */
+                const cafe = cafes[iCafe % cafes.length];
+                const almoco = almocos[iAlmoco % almocos.length];
+                const jantar = jantares[iJantar % jantares.length];
+
+                // Somamos o custo estimado (baseado no orçamento do filtro escolhido)
+                totalWeeklyCost += (priceMap[budget] * 3); // 3 refeições por dia
+
+                const dayCard = document.createElement('div');
+                dayCard.className = 'day-card';
+                dayCard.innerHTML = `
+                    <h4>${dia}</h4>
+                    <div class="meal-box"><span class="meal-tag">☕ Café</span><p class="meal-name">${cafe ? cafe.nome : "Opção Indisponível"}</p></div>
+                    <div class="meal-box"><span class="meal-tag">🍛 Almoço</span><p class="meal-name">${almoco ? almoco.nome : "Opção Indisponível"}</p></div>
+                    <div class="meal-box"><span class="meal-tag">🥗 Jantar</span><p class="meal-name">${jantar ? jantar.nome : "Opção Indisponível"}</p></div>
+                `;
+                
+                container.appendChild(dayCard);
+
+                // Incrementamos os índices para a próxima refeição do dia seguinte ser diferente
+                iCafe++; iAlmoco++; iJantar++;
+            });
+
+            // Atualiza o contador de custo visual
+            totalDisplay.innerText = `R$ ${totalWeeklyCost.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`;
+        }
+
+        /**
+         * FUNÇÃO DE EMBARALHAMENTO (FISHER-YATES / RANDOM SORT)
+         * Embaralha a ordem original para que o sorteio de 'Segunda a Domingo' seja sempre único.
+         */
+        function shuffleArray(array) {
+            return array.sort(() => Math.random() - 0.5);
+        }
+    </script>
+</body>
+</html>

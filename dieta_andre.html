@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dashboard de Saúde | Carlos Eduardo Mendes Bragança</title>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600&family=Playfair+Display:wght@700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         :root {
             --primary-blue: #2E5BFF;
@@ -70,7 +71,7 @@
         /* STATS GRID */
         .stats-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
             gap: 1.5rem;
             margin-bottom: 2rem;
         }
@@ -82,7 +83,7 @@
             box-shadow: var(--shadow);
             display: flex;
             align-items: center;
-            gap: 1.2rem;
+            gap: 1rem;
             border: 1px solid var(--border);
             transition: var(--transition);
         }
@@ -90,20 +91,71 @@
         .stat-card:hover { transform: translateY(-5px); }
 
         .stat-icon {
-            width: 50px;
-            height: 50px;
+            width: 45px;
+            height: 45px;
             border-radius: 14px;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 1.5rem;
+            font-size: 1.3rem;
         }
 
         .icon-blue { background: #E3F2FD; color: var(--primary-blue); }
         .icon-green { background: #E8F5E9; color: var(--primary-green); }
 
-        .stat-info h3 { font-size: 1.4rem; font-weight: 600; color: var(--text-main); }
-        .stat-info p { color: var(--text-soft); font-size: 0.9rem; }
+        .stat-info h3 { font-size: 1.2rem; font-weight: 600; color: var(--text-main); }
+        .stat-info p { color: var(--text-soft); font-size: 0.8rem; }
+
+        /* WEIGHT TRACKER */
+        .tracker-grid {
+            display: grid;
+            grid-template-columns: 1fr 2fr;
+            gap: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        .weight-input-box {
+            background: var(--white);
+            padding: 2rem;
+            border-radius: 20px;
+            box-shadow: var(--shadow);
+            display: flex;
+            flex-direction: column;
+            gap: 1.2rem;
+            border: 1px solid var(--border);
+        }
+
+        .weight-input-box label { font-size: 0.9rem; font-weight: 600; color: var(--text-soft); }
+        .weight-input-box input {
+            padding: 12px;
+            border-radius: 12px;
+            border: 1px solid var(--border);
+            font-size: 1.2rem;
+            font-weight: 600;
+            outline: none;
+            transition: var(--transition);
+        }
+        .weight-input-box input:focus { border-color: var(--primary-blue); box-shadow: 0 0 0 3px var(--primary-blue-soft); }
+
+        .add-weight-btn {
+            background: var(--primary-blue);
+            color: white;
+            border: none;
+            padding: 12px;
+            border-radius: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: var(--transition);
+        }
+        .add-weight-btn:hover { background: #1E40AF; }
+
+        .chart-container {
+            background: var(--white);
+            padding: 1.5rem;
+            border-radius: 20px;
+            box-shadow: var(--shadow);
+            border: 1px solid var(--border);
+        }
 
         /* DIET TABLE */
         .diet-section {
@@ -242,7 +294,7 @@
         <header class="profile-header">
             <div class="profile-info">
                 <p>PACIENTE ATIVO • 2026</p>
-                <h1>Juliana Martins de Oliveira</h1>
+                <h1 id="userNameDisplay">Carregando...</h1>
                 <div class="badge">Plano Alimentar Individualizado</div>
             </div>
             <div class="profile-photo">
@@ -265,6 +317,20 @@
                     <p>Refeições Livres</p>
                     <h3>Max 2/semana</h3>
                 </div>
+            </div>
+        </div>
+
+        <!-- WEIGHT TRACKER -->
+        <h3 style="margin-bottom: 1.5rem; color: var(--text-soft); font-size: 1rem; text-transform: uppercase;">📈 Evolução de Peso</h3>
+        <div class="tracker-grid">
+            <div class="weight-input-box">
+                <label for="weightInput">Novo Peso (kg)</label>
+                <input type="number" id="weightInput" step="0.1" placeholder="Ex: 82.5">
+                <button class="add-weight-btn" id="addWeightBtn">Registrar Progresso</button>
+                <p id="weightFeedback" style="font-size: 0.8rem; color: var(--primary-green); display: none;">Peso registrado!</p>
+            </div>
+            <div class="chart-container">
+                <canvas id="weightChart"></canvas>
             </div>
         </div>
 
@@ -328,6 +394,23 @@
     </div>
 
     <script>
+        // AUTH GUARD
+        const sessionUser = JSON.parse(localStorage.getItem('sessionUser'));
+        if (!sessionUser) {
+            window.location.href = 'login.html';
+        }
+
+        // DYNAMISM: Update Name
+        const userNameDisplay = document.getElementById('userNameDisplay');
+        const capitalizedName = sessionUser.username.split(' ').map(s => s.charAt(0).toUpperCase() + s.substring(1)).join(' ');
+        userNameDisplay.innerText = capitalizedName;
+        document.title = `Dashboard de Saúde | ${capitalizedName}`;
+
+        function logout() {
+            localStorage.removeItem('sessionUser');
+            window.location.href = 'login.html';
+        }
+
         const themeToggle = document.getElementById('theme-toggle');
         const body = document.body;
 
@@ -346,6 +429,92 @@
             body.classList.add('dark-theme');
             updateThemeButton(true);
         }
+
+        // --- LÓGICA DO GRÁFICO DE PESO ---
+        const weightInput = document.getElementById('weightInput');
+        const addWeightBtn = document.getElementById('addWeightBtn');
+        const weightChartCtx = document.getElementById('weightChart').getContext('2d');
+        const weightFeedback = document.getElementById('weightFeedback');
+
+        // Carregar dados ESPECÍFICOS DO USUÁRIO
+        const weightKey = `weightHistory_${sessionUser.username}`;
+        let weightData = JSON.parse(localStorage.getItem(weightKey)) || [
+            { date: '01/03', weight: 80.0 },
+            { date: '15/03', weight: 79.2 }
+        ];
+
+        let weightChart;
+
+        function initChart() {
+            const isDark = body.classList.contains('dark-theme');
+            const gridColor = isDark ? '#334155' : '#E2E8F0';
+            const textColor = isDark ? '#94A3B8' : '#64748B';
+
+            const data = {
+                labels: weightData.map(d => d.date),
+                datasets: [{
+                    label: 'Peso Corporal (kg)',
+                    data: weightData.map(d => d.weight),
+                    borderColor: '#2E5BFF',
+                    backgroundColor: 'rgba(46, 91, 255, 0.1)',
+                    borderWidth: 3,
+                    tension: 0.4,
+                    fill: true,
+                    pointBackgroundColor: '#2E5BFF',
+                    pointRadius: 5
+                }]
+            };
+
+            const config = {
+                type: 'line',
+                data: data,
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false }
+                    },
+                    scales: {
+                        y: {
+                            grid: { color: gridColor },
+                            ticks: { color: textColor }
+                        },
+                        x: {
+                            grid: { display: false },
+                            ticks: { color: textColor }
+                        }
+                    }
+                }
+            };
+
+            if (weightChart) weightChart.destroy();
+            weightChart = new Chart(weightChartCtx, config);
+        }
+
+        addWeightBtn.addEventListener('click', () => {
+            const weight = parseFloat(weightInput.value);
+            if (!isNaN(weight) && weight > 0) {
+                const today = new Date();
+                const dateStr = today.getDate().toString().padStart(2, '0') + '/' + (today.getMonth() + 1).toString().padStart(2, '0');
+                
+                weightData.push({ date: dateStr, weight: weight });
+                if (weightData.length > 7) weightData.shift(); 
+
+                localStorage.setItem(weightKey, JSON.stringify(weightData));
+                initChart();
+                
+                weightInput.value = '';
+                weightFeedback.style.display = 'block';
+                setTimeout(() => weightFeedback.style.display = 'none', 2000);
+            }
+        });
+
+        // Re-inicializar gráfico ao mudar o tema para atualizar cores
+        themeToggle.addEventListener('click', () => {
+            setTimeout(initChart, 10);
+        });
+
+        initChart();
     </script>
 </body>
 </html>

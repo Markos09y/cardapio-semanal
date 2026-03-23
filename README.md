@@ -15,9 +15,5 @@ O **MenuMestre** é uma aplicação web que ajuda usuários a organizarem suas r
 - CSS3 (Flexbox/Grid)
 - JavaScript (Vanilla JS)
 
-## 🚀 Como testar
-1. Clone o repositório: `git clone https://github.com/seu-usuario/nome-do-projeto.git`
-2. Abra o arquivo `index.html` no seu navegador.
-
 ---
 Desenvolvido por marcos
